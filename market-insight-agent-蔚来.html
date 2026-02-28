@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔚来舆情监测 - 市场洞察Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 左侧导航栏 */
+        .sidebar {
+            width: 260px;
+            background-color: white;
+            color: #333;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            background-color: white;
+        }
+        
+        /* Logo 部分 */
+        .logo-section {
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .logo-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        /* 新建任务按钮 */
+        .new-task-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #ebf5ff;
+            color: #3498db;
+            border: 1px solid #d6eaff;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        
+        .new-task-btn:hover {
+            background-color: #dbeafe;
+        }
+        
+        /* 团队部分 */
+        .team-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .team-section:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .team-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .team-text {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        /* 监测任务部分 */
+        .monitoring-section {
+            margin-top: 16px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .section-header:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .section-header.active {
+            background-color: #ebf5ff;
+            border-left: 3px solid #3498db;
+        }
+        
+        .section-icon {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        .section-title {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        /* 侧边栏任务列表 */
+        .task-list-sidebar {
+            padding-left: 30px;
+            margin-top: 10px;
+        }
+        
+        .task-item-sidebar {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .task-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 10px;
+            color: white;
+        }
+        
+        .monitor-icon {
+            background-color: #3498db;
+        }
+        
+        .monitor-icon::before {
+            content: "🔍";
+        }
+        
+        .report-icon {
+            background-color: #2ecc71;
+        }
+        
+        .report-icon::before {
+            content: "📄";
+        }
+        
+        .task-item-sidebar:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .task-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            background-color: white;
+        }
+        
+        .task-name {
+            font-size: 13px;
+            color: #555;
+        }
+        
+        /* 任务分类 */
+        .task-category {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+        
+        .category-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        
+        .category-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* 权益额度部分 */
+        .credit-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+        }
+        
+        .credit-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .credit-icon {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        .credit-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .credit-info {
+            margin-top: 10px;
+        }
+        
+        .credit-amount {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e67e22;
+            margin-bottom: 8px;
+        }
+        
+        .credit-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .credit-progress {
+            width: 60%;
+            height: 100%;
+            background-color: #e67e22;
+            border-radius: 4px;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background-color: #ffffff;
+            position: relative;
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 24px;
+        }
+        
+        .page-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        /* 任务流程步骤 */
+        .task-steps {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-right: 24px;
+        }
+        
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        
+        .step-text {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background-color: #e0e0e0;
+            margin: 0 12px;
+        }
+        
+        .step-line.active {
+            background-color: #3498db;
+        }
+        
+        /* 内容区域 */
+        .content-area {
+            display: flex;
+            gap: 24px;
+        }
+        
+        /* 左侧内容 */
+        .left-content {
+            flex: 1;
+        }
+        
+        /* 专家分析卡片 */
+        .expert-card {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .expert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .expert-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .expert-toggle {
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .expert-content {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .expert-content ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+        
+        .expert-content li {
+            margin-bottom: 4px;
+        }
+        
+        /* 数据监测方案 */
+        .data-plan {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .data-plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .data-plan-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .data-plan-content {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        /* 判定明细 */
+        .decision-detail {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .decision-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .decision-detail-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .decision-detail-content {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        /* 推送设置 */
+        .push-settings {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .push-settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .push-settings-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .push-settings-content {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background-color: #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: inline-block;
+        }
+        
+        .toggle-switch.active {
+            background-color: #3498db;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+        
+        /* 右侧推送设置面板 */
+        .right-panel {
+            width: 300px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .panel-section {
+            margin-bottom: 20px;
+        }
+        
+        .panel-section-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .panel-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .panel-item-label {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .panel-item-input {
+            padding: 6px 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 120px;
+        }
+        
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .checkbox-item label {
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+        }
+        
+        /* 确认提交按钮 */
+        .submit-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 10px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        /* 右侧浮动按钮 */
+        .floating-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 150px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .floating-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .floating-btn:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .sidebar-header {
+                padding: 15px 0;
+            }
+            
+            .sidebar-footer {
+                padding: 15px 0;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .page-header h1 {
+                font-size: 18px;
+            }
+            
+            .task-steps {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .step {
+                margin-right: 16px;
+            }
+            
+            .content-area {
+                flex-direction: column;
+            }
+            
+            .right-panel {
+                width: 100%;
+            }
+            
+            .floating-buttons {
+                right: 80px;
+            }
+        }
+        
+        /* 平板设备响应式设计 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            
+            .content-area {
+                flex-direction: column;
+            }
+            
+            .right-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-section">
+                    <div class="logo">
+                        <div class="logo-icon">M</div>
+                        <span class="logo-text">市场洞察Agent</span>
+                    </div>
+                </div>
+                
+                <button class="new-task-btn" onclick="window.location.href='market-insight-agent.html'">+新建任务</button>
+                
+                <div class="team-section" onclick="window.location.href='market-insight-agent-agents.html'">
+                    <div class="team-icon">👥</div>
+                    <span class="team-text">Agents Team</span>
+                </div>
+                
+                <div class="section-header active" onclick="window.location.href='market-insight-agent.html'">
+                    <div class="section-icon">💬</div>
+                    <span class="section-title">历史会话</span>
+                </div>
+                
+                <div class="monitoring-section">
+                    <div class="section-header" onclick="window.location.href='market-insight-agent-all-tasks.html'">
+                        <div class="section-icon">📋</div>
+                        <span class="section-title">所有任务</span>
+                    </div>
+                    <div class="task-list-sidebar">
+                        <div class="task-item-sidebar">
+                            <div class="task-icon monitor-icon"></div>
+                            <span class="task-name">厨来购车舆情监测</span>
+                        </div>
+                        <div class="task-item-sidebar">
+                            <div class="task-icon monitor-icon"></div>
+                            <span class="task-name">上海黄金T+D涨跌监测</span>
+                        </div>
+                        <div class="task-item-sidebar">
+                            <div class="task-icon report-icon"></div>
+                            <span class="task-name">方太厨具视频声量报告</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="credit-section" onclick="window.location.href='market-insight-agent-credit.html'" style="cursor: pointer;">
+                    <div class="credit-header">
+                        <div class="credit-icon">💎</div>
+                        <span class="credit-title">权益额度</span>
+                    </div>
+                    <div class="credit-info">
+                        <span class="credit-amount">您有1,500个</span>
+                        <div class="credit-bar">
+                            <div class="credit-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <h1>蔚来舆情监测</h1>
+            </div>
+            
+            <!-- 任务流程步骤 -->
+            <div class="task-steps">
+                <div class="step">
+                    <div class="step-icon">1</div>
+                    <div class="step-text">需求分析</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step">
+                    <div class="step-icon">2</div>
+                    <div class="step-text">生成搜索方案</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step">
+                    <div class="step-icon">3</div>
+                    <div class="step-text">确认搜索方案</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step">
+                    <div class="step-icon">4</div>
+                    <div class="step-text">推送设置</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step">
+                    <div class="step-icon">5</div>
+                    <div class="step-text">任务创建完毕</div>
+                </div>
+            </div>
+            
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <!-- 左侧内容 -->
+                <div class="left-content">
+                    <!-- 研判组-搜索策略专家 -->
+                    <div class="expert-card">
+                        <div class="expert-header">
+                            <div class="expert-title">研判组-搜索策略专家</div>
+                            <div class="expert-toggle">▼</div>
+                        </div>
+                        <div class="expert-content">
+                            <p><strong>研判结论：需要定制搜索方案</strong></p>
+                            <ul>
+                                <li>正面：用户提及蔚来汽车、支付完全、推荐私人购买、银行贷款估价（认为划算）、蔚来免费（如换电）、产品力强（设计好、性能）、服务评价好、“一定要”用户被产品起车魅力、推荐人购买、对价格能接受、产力强（设计好、性能）、服务评价好、“一定要”用户被产品起车魅力、推荐人购买、对价格能接受</li>
+                                <li>中性：用户对换电时间的顾虑、具体交付、交车价格、金融方案流程、延续性相关质疑、质保、没有提及具体车型但提及蔚来品牌</li>
+                                <li>负面：用户提及没有现车、且维修价格高（是否可信？）</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- 搜索组-社群搜索专家 -->
+                    <div class="expert-card">
+                        <div class="expert-header">
+                            <div class="expert-title">搜索组-社群搜索专家</div>
+                            <div class="expert-toggle">▼</div>
+                        </div>
+                        <div class="expert-content">
+                            <p><strong>搜索策略：社群深度搜索</strong></p>
+                            <p>蔚来、蔚来ES6、蔚来ES7、蔚来EC6、蔚来ET5、蔚来ET7、蔚来EC7、蔚来EP9、蔚来汽车、蔚来电动车、蔚来换电、蔚来服务、蔚来价格、蔚来优惠、蔚来现车、蔚来交付、蔚来金融、蔚来质保、蔚来维修、蔚来性能、蔚来设计、蔚来推荐</p>
+                            <p>以上词汇为主要搜索词，需根据实际情况，如舆情等，调整搜索词的优先级或范围。</p>
+                            <p>当用户任务为长期监测蔚来汽车相关舆情时，其范围可能需要进行些微调整以保持一致性。首先，需覆盖所有蔚来汽车产品线，包括但不限于ES6、ES7、EC6、ET5、ET7、EC7等；其次，需覆盖用户可能关心的核心话题，如产品力（设计、性能、空间等）、服务体验（换电、质保、维修等）、价格与购买政策（优惠、金融方案、交付周期等）、品牌口碑（用户评价、推荐情况等）。同时，需特别关注负面信息，如质量问题、服务投诉、价格争议等，以全面掌握蔚来汽车的市场舆情动态。</p>
+                            <p>搜索策略和判定已生成，已被核心团队分析，已确认。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据监测方案 -->
+                    <div class="data-plan">
+                        <div class="data-plan-header">
+                            <div class="data-plan-title">数据监测方案</div>
+                            <div class="expert-toggle">📋</div>
+                        </div>
+                        <div class="data-plan-content">
+                            <p>蔚来汽车舆情监测方案</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 判定明细 -->
+                    <div class="decision-detail">
+                        <div class="decision-detail-header">
+                            <div class="decision-detail-title">判定明细</div>
+                            <div class="expert-toggle">🔍</div>
+                        </div>
+                        <div class="decision-detail-content">
+                            <p>蔚来汽车相关舆情</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 推送设置 -->
+                    <div class="push-settings">
+                        <div class="push-settings-header">
+                            <div class="push-settings-title">推送设置</div>
+                        </div>
+                        <div class="push-settings-content">
+                            <p>蔚来汽车舆情监测</p>
+                            <p>开启推送设置：<span class="toggle-switch"></span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧推送设置面板 -->
+                <div class="right-panel">
+                    <div class="panel-title">推送设置</div>
+                    
+                    <div class="panel-section">
+                        <div class="panel-section-title">分类预警</div>
+                        <div class="panel-item">
+                            <div class="panel-item-label">分类预警</div>
+                            <div class="toggle-switch"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <div class="panel-section-title">预警方式</div>
+                        <div class="panel-item">
+                            <div class="panel-item-label">预警方式</div>
+                            <select class="panel-item-input">
+                                <option>按小时</option>
+                                <option>按天</option>
+                                <option>实时</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <div class="panel-section-title">接收时段</div>
+                        <div class="panel-item">
+                            <div class="panel-item-label">接收时段</div>
+                            <div class="time-inputs">
+                                <input type="time" class="panel-item-input" value="00:00">
+                                <span>-</span>
+                                <input type="time" class="panel-item-input" value="23:59">
+                            </div>
+                        </div>
+                        <div class="panel-item">
+                            <div class="panel-item-label">持续关注</div>
+                            <div class="toggle-switch active"></div>
+                        </div>
+                        <div class="panel-item">
+                            <div class="panel-item-label">接收时段外的内容将在下次接收时段开始时集中管理</div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <div class="panel-section-title">接收方式</div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="feishu">
+                                <label for="feishu">飞书群组</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="email">
+                                <label for="email">邮箱</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="sms">
+                                <label for="sms">短信</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 确认提交按钮 -->
+            <button class="submit-btn">确认提交</button>
+        </div>
+        
+        <!-- 右侧浮动按钮 -->
+        <div class="floating-buttons">
+            <button class="floating-btn">💬</button>
+            <button class="floating-btn">🔄</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔚来舆情监测 - 市场洞察Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 左侧导航栏 */
+        .sidebar {
+            width: 260px;
+            background-color: white;
+            color: #333;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            background-color: white;
+        }
+        
+        /* Logo 部分 */
+        .logo-section {
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .logo-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        /* 新建任务按钮 */
+        .new-task-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #ebf5ff;
+            color: #3498db;
+            border: 1px solid #d6eaff;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        
+        .new-task-btn:hover {
+            background-color: #dbeafe;
+        }
+        
+        .new-task-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        /* 团队部分 */
+        .team-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .team-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .team-text {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        /* 监测任务部分 */
+        .monitoring-section {
+            margin-top: 16px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .section-header:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .section-header.active {
+            background-color: #ebf5ff;
+            border-left: 3px solid #3498db;
+        }
+        
+        .section-icon {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        .section-title {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        /* 侧边栏任务列表 */
+        .task-list-sidebar {
+            padding-left: 30px;
+            margin-top: 10px;
+        }
+        
+        .task-item-sidebar {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .task-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 10px;
+            color: white;
+        }
+        
+        .monitor-icon {
+            background-color: #3498db;
+        }
+        
+        .monitor-icon::before {
+            content: "🔍";
+        }
+        
+        .report-icon {
+            background-color: #2ecc71;
+        }
+        
+        .report-icon::before {
+            content: "📄";
+        }
+        
+        .task-item-sidebar:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .task-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            background-color: white;
+        }
+        
+        .task-name {
+            font-size: 13px;
+            color: #555;
+        }
+        
+        /* 任务分类 */
+        .task-category {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+        
+        .category-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        
+        .category-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* 权益额度部分 */
+        .credit-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+        }
+        
+        .credit-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .credit-icon {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        .credit-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .credit-info {
+            margin-top: 10px;
+        }
+        
+        .credit-amount {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e67e22;
+            margin-bottom: 8px;
+        }
+        
+        .credit-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .credit-progress {
+            width: 60%;
+            height: 100%;
+            background-color: #e67e22;
+            border-radius: 4px;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background-color: #ffffff;
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 32px;
+        }
+        
+        .page-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        
+        /* 任务详情卡片 */
+        .task-detail-card {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .task-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .task-detail-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .task-detail-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .task-detail-content {
+            margin-bottom: 20px;
+        }
+        
+        .task-detail-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        
+        .task-detail-label {
+            width: 120px;
+            font-weight: 500;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .task-detail-value {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        /* 监测结果部分 */
+        .monitoring-results {
+            margin-top: 32px;
+        }
+        
+        .monitoring-results h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .result-card {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .result-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .result-time {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .result-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .result-content p {
+            margin-bottom: 8px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .sidebar-header {
+                padding: 15px 0;
+            }
+            
+            .sidebar-footer {
+                padding: 15px 0;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .page-header h1 {
+                font-size: 18px;
+            }
+            
+            .task-detail-row {
+                flex-direction: column;
+            }
+            
+            .task-detail-label {
+                width: 100%;
+                margin-bottom: 4px;
+            }
+        }
+        
+        /* 平板设备响应式设计 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-section">
+                    <div class="logo">
+                        <div class="logo-icon">M</div>
+                        <span class="logo-text">市场洞察Agent</span>
+                    </div>
+                </div>
+                
+                <button class="new-task-btn" onclick="window.location.href='market-insight-agent.html'">+新建任务</button>
+                
+                <div class="team-section">
+                    <div class="team-icon">👥</div>
+                    <span class="team-text">Agents Team</span>
+                </div>
+                
+                <div class="section-header active" onclick="window.location.href='market-insight-agent.html'">
+                    <div class="section-icon">💬</div>
+                    <span class="section-title">历史会话</span>
+                </div>
+                
+                <div class="monitoring-section">
+                    <div class="section-header">
+                        <div class="section-icon">📋</div>
+                        <span class="section-title">所有任务</span>
+                    </div>
+                    <div class="task-list-sidebar">
+                        <div class="task-item-sidebar">
+                            <div class="task-icon monitor-icon"></div>
+                            <span class="task-name">厨来购车舆情监测</span>
+                        </div>
+                        <div class="task-item-sidebar">
+                            <div class="task-icon monitor-icon"></div>
+                            <span class="task-name">上海黄金T+D涨跌监测</span>
+                        </div>
+                        <div class="task-item-sidebar">
+                            <div class="task-icon report-icon"></div>
+                            <span class="task-name">方太厨具视频声量报告</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="credit-section">
+                    <div class="credit-header">
+                        <div class="credit-icon">💎</div>
+                        <span class="credit-title">权益额度</span>
+                    </div>
+                    <div class="credit-info">
+                        <span class="credit-amount">您有1,500个</span>
+                        <div class="credit-bar">
+                            <div class="credit-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <h1>蔚来舆情监测</h1>
+            </div>
+            
+            <!-- 任务详情卡片 -->
+            <div class="task-detail-card">
+                <div class="task-detail-header">
+                    <div class="task-detail-title">任务详情</div>
+                    <div class="task-detail-status">进行中</div>
+                </div>
+                
+                <div class="task-detail-content">
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">监测主体：</div>
+                        <div class="task-detail-value">蔚来汽车</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">监测需求：</div>
+                        <div class="task-detail-value">近期舆情信息</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">监测范围：</div>
+                        <div class="task-detail-value">社交媒体、新闻网站、论坛博客</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">监测关键词：</div>
+                        <div class="task-detail-value">蔚来、电动车、自动驾驶、股价、创始人</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">创建时间：</div>
+                        <div class="task-detail-value">2026-02-27 15:30</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 监测结果 -->
+            <div class="monitoring-results">
+                <h2>监测结果</h2>
+                
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-title">社交媒体舆情</div>
+                        <div class="result-time">2小时前</div>
+                    </div>
+                    <div class="result-content">
+                        <p>根据监测数据，蔚来汽车在社交媒体上的提及量较昨日增长15%，主要集中在以下几个方面：</p>
+                        <p>1. 蔚来全新ES8车型发布，获得较多正面评价</p>
+                        <p>2. 蔚来自动驾驶技术在最新测试中表现优异</p>
+                        <p>3. 部分用户对蔚来服务体系表示满意</p>
+                        <p>4. 极少数负面评价主要集中在充电便利性方面</p>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-title">新闻媒体报道</div>
+                        <div class="result-time">4小时前</div>
+                    </div>
+                    <div class="result-content">
+                        <p>今日关于蔚来汽车的新闻报道主要包括：</p>
+                        <p>1. 《财经日报》：蔚来2026年第一季度销量同比增长30%</p>
+                        <p>2. 《汽车之家》：蔚来发布全新智能驾驶辅助系统</p>
+                        <p>3. 《科技日报》：蔚来与多家科技公司达成战略合作</p>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-title">论坛博客讨论</div>
+                        <div class="result-time">6小时前</div>
+                    </div>
+                    <div class="result-content">
+                        <p>论坛和博客中关于蔚来的讨论热点：</p>
+                        <p>1. 蔚来车主分享使用体验，满意度较高</p>
+                        <p>2. 行业分析师对蔚来股价前景的分析</p>
+                        <p>3. 关于蔚来换电模式的讨论</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
